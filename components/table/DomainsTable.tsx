@@ -3,7 +3,7 @@ import { Table, Tag, Dropdown, Button, Skeleton } from "antd";
 import { ExclamationCircleOutlined, MoreOutlined } from "@ant-design/icons";
 import React, { useState } from "react";
 import Link from "next/link";
-import { useGetDomainsQuery, useUpdateDomainMutation } from "@/app/hooks/domainApi";
+import { useGetDomainsQuery, useUpdateDomainMutation, useDeleteDomainMutation } from "@/app/hooks/domainApi";
 import type { Domain } from "@/app/hooks/domainApi";
 import AddDomainDrawer from "@/components/drawer/AddDomainDrawer";
 
@@ -14,9 +14,10 @@ interface DomainsTableProps {
 
 const DomainsTable = ({ searchQuery, orderBy }: DomainsTableProps) => {
   const { data: domains, isLoading, error } = useGetDomainsQuery();
-  const [updateDomain] = useUpdateDomainMutation();
   const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [updateDomain] = useUpdateDomainMutation();
+  const [deleteDomain] = useDeleteDomainMutation();
 
   const filteredAndSortedDomains = React.useMemo(() => {
     if (!domains) return [];
@@ -69,6 +70,14 @@ const DomainsTable = ({ searchQuery, orderBy }: DomainsTableProps) => {
     }
   };
 
+  const handleDelete = async (id: string) => {
+    try {
+      await deleteDomain(id).unwrap();
+    } catch (error) {
+      console.error('Failed to delete domain:', error);
+    }
+  };
+
   const columns = [
     {
       title: "Domain URL",
@@ -117,22 +126,19 @@ const DomainsTable = ({ searchQuery, orderBy }: DomainsTableProps) => {
           {
             key: "edit",
             label: "Edit",
+            onClick: () => handleEdit(record)
           },
           {
             key: "delete",
             label: <span className="text-red-600">Delete</span>,
             danger: true,
+            onClick: () => handleDelete(record.id)
           },
         ];
         return (
           <Dropdown
             menu={{
               items: menuItems,
-              onClick: ({ key }) => {
-                if (key === 'edit') {
-                  handleEdit(record);
-                }
-              }
             }}
             trigger={["click"]}
             placement="bottomRight"

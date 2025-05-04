@@ -40,11 +40,19 @@ export const domainApi = createApi({
       }),
       invalidatesTags: ['Domain'],
     }),
+    deleteDomain: builder.mutation<void, string>({
+      query: (id) => ({
+        url: `domain/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Domain'],
+    }),
   }),
 });
 
 export const { 
   useGetDomainsQuery, 
   useCreateDomainMutation,
-  useUpdateDomainMutation 
+  useUpdateDomainMutation,
+  useDeleteDomainMutation
 } = domainApi; 

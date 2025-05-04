@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Drawer, Button } from "antd";
 import { CloseOutlined } from "@ant-design/icons";
 import DomainForm from "./DomainForm";
@@ -27,16 +27,31 @@ const AddDomainDrawer: React.FC<AddDomainDrawerProps> = ({
 }) => {
   const { control, handleSubmit, reset } = useForm<FormValues>({
     defaultValues: {
-      domain: initialData?.domain || '',
-      status: initialData?.status || 'pending',
-      isActive: initialData?.isActive ?? true
+      domain: '',
+      status: 'pending',
+      isActive: true
     }
   });
   const [createDomain, { isLoading: isCreating }] = useCreateDomainMutation();
   const [updateDomain, { isLoading: isUpdating }] = useUpdateDomainMutation();
 
+  useEffect(() => {
+    if (open && initialData) {
+      reset({
+        domain: initialData.domain,
+        status: initialData.status,
+        isActive: initialData.isActive
+      });
+    } else if (open) {
+      reset({
+        domain: '',
+        status: 'pending',
+        isActive: true
+      });
+    }
+  }, [open, initialData, reset]);
+
   const handleClose = () => {
-    reset();
     onClose();
   };
 
