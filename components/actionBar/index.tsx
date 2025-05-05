@@ -3,8 +3,8 @@ import { useState } from "react";
 import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import { Button, Input, Select } from "antd";
 import AddDomainDrawer from "@/components/drawer/AddDomainDrawer";
-import { useCreateDomainMutation } from "@/app/hooks/domainApi";
-import type { Domain } from "@/app/hooks/domainApi";
+import { useCreateDomainMutation } from "@/hooks/domainApi";
+import type { Domain } from "@/hooks/domainApi";
 
 const { Option } = Select;
 

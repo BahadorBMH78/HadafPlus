@@ -1,12 +1,12 @@
 "use client";
 import React, { useCallback, useEffect } from "react";
 import { Table, Skeleton, Empty } from "antd";
-import { useGetDomainsQuery } from "@/app/hooks/domainApi";
-import type { Domain } from "@/app/hooks/domainApi";
+import { useGetDomainsQuery } from "@/hooks/domainApi";
+import type { Domain } from "@/hooks/domainApi";
 import AddDomainDrawer from "@/components/drawer/AddDomainDrawer";
-import { useNotification } from "@/app/hooks/useNotification";
-import { useDomainOperations } from "@/app/hooks/useDomainOperations";
-import { useDomainData } from "@/app/hooks/useDomainData";
+import { useNotification } from "@/hooks/useNotification";
+import { useDomainOperations } from "@/hooks/useDomainOperations";
+import { useDomainData } from "@/hooks/useDomainData";
 import { getDomainTableColumns } from "./DomainTableColumns";
 
 interface DomainsTableProps {
@@ -14,7 +14,7 @@ interface DomainsTableProps {
   orderBy: string;
 }
 
-const DomainsTable = ({ searchQuery, orderBy }: DomainsTableProps) => {
+const DomainsTable = ({ searchQuery, orderBy }: DomainsTableProps): React.ReactElement => {
   const { data: domains, isLoading, error: fetchError } = useGetDomainsQuery();
   const notification = useNotification();
   const {
@@ -99,7 +99,10 @@ const DomainsTable = ({ searchQuery, orderBy }: DomainsTableProps) => {
 
   const columns = getDomainTableColumns({ getMenuItems });
 
-  if (fetchError) return notification.error("Error", "There was an error on loading domains.");
+  if (fetchError) {
+    notification.error("Error", "There was an error on loading domains.");
+    return <div>Error loading domains</div>;
+  }
 
   return (
     <>

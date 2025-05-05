@@ -1,7 +1,8 @@
+"use client"
 import { Button, Tag, Dropdown } from 'antd';
 import { ExclamationCircleOutlined, MoreOutlined } from '@ant-design/icons';
 import Link from 'next/link';
-import type { Domain } from '@/app/hooks/domainApi';
+import type { Domain } from '@/hooks/domainApi';
 import type { ColumnsType } from 'antd/es/table';
 
 interface DomainTableColumnsProps {

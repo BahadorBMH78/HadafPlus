@@ -3,8 +3,8 @@ import { Drawer, Button } from "antd";
 import { CloseOutlined } from "@ant-design/icons";
 import DomainForm from "./DomainForm";
 import { useForm } from "react-hook-form";
-import type { Domain } from "@/app/hooks/domainApi";
-import { useNotification } from "@/app/hooks/useNotification";
+import type { Domain } from "@/hooks/domainApi";
+import { useNotification } from "@/hooks/useNotification";
 
 interface AddDomainDrawerProps {
   open: boolean;

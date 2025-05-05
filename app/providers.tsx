@@ -1,7 +1,7 @@
 "use client";
 import { ConfigProvider, App } from "antd";
 import { Provider } from "react-redux";
-import { store } from "./store";
+import { store } from "../store";
 
 import { createCache, extractStyle, StyleProvider } from "@ant-design/cssinjs";
 import type Entity from "@ant-design/cssinjs/es/Cache";
