@@ -1,17 +1,13 @@
 "use client";
-import React, { useState, useMemo, useCallback, useEffect } from "react";
-import { Table, Tag, Dropdown, Button, Skeleton } from "antd";
-import { ExclamationCircleOutlined, MoreOutlined } from "@ant-design/icons";
-import Link from "next/link";
-import {
-  useGetDomainsQuery,
-  useUpdateDomainMutation,
-  useDeleteDomainMutation,
-  useCreateDomainMutation,
-} from "@/app/hooks/domainApi";
+import React, { useCallback, useEffect } from "react";
+import { Table, Skeleton } from "antd";
+import { useGetDomainsQuery } from "@/app/hooks/domainApi";
 import type { Domain } from "@/app/hooks/domainApi";
 import AddDomainDrawer from "@/components/drawer/AddDomainDrawer";
 import { useNotification } from "@/app/hooks/useNotification";
+import { useDomainOperations } from "@/app/hooks/useDomainOperations";
+import { useDomainData } from "@/app/hooks/useDomainData";
+import { getDomainTableColumns } from "./DomainTableColumns";
 
 interface DomainsTableProps {
   searchQuery: string;
@@ -20,12 +16,27 @@ interface DomainsTableProps {
 
 const DomainsTable = ({ searchQuery, orderBy }: DomainsTableProps) => {
   const { data: domains, isLoading, error: fetchError } = useGetDomainsQuery();
-  const [selectedDomain, setSelectedDomain] = useState<Domain | null>(null);
-  const [drawerOpen, setDrawerOpen] = useState(false);
-  const [updateDomain, { isLoading: isUpdating, isSuccess: isUpdateSuccess, isError: isUpdateError }] = useUpdateDomainMutation();
-  const [createDomain, { isLoading: isCreating, isSuccess: isCreateSuccess, isError: isCreateError }] = useCreateDomainMutation();
-  const [deleteDomain, { isSuccess: isDeleteSuccess, isError: isDeleteError }] = useDeleteDomainMutation();
   const notification = useNotification();
+  const {
+    selectedDomain,
+    drawerOpen,
+    isUpdating,
+    isCreating,
+    handleEdit,
+    handleClose,
+    handleCreate,
+    handleUpdate,
+    handleDelete,
+    handleVerify,
+    isUpdateSuccess,
+    isCreateSuccess,
+    isDeleteSuccess,
+    isUpdateError,
+    isCreateError,
+    isDeleteError
+  } = useDomainOperations();
+
+  const filteredAndSortedDomains = useDomainData(domains, searchQuery, orderBy);
 
   // Handle success and error states
   useEffect(() => {
@@ -33,14 +44,14 @@ const DomainsTable = ({ searchQuery, orderBy }: DomainsTableProps) => {
       notification.success("Success", "Domain added successfully");
       handleClose();
     }
-  }, [isCreateSuccess]);
+  }, [isCreateSuccess, handleClose]);
 
   useEffect(() => {
     if (isUpdateSuccess) {
       notification.success("Success", "Domain updated successfully");
       handleClose();
     }
-  }, [isUpdateSuccess]);
+  }, [isUpdateSuccess, handleClose]);
 
   useEffect(() => {
     if (isDeleteSuccess) {
@@ -66,74 +77,6 @@ const DomainsTable = ({ searchQuery, orderBy }: DomainsTableProps) => {
     }
   }, [isDeleteError]);
 
-  // Filter and sort domains
-  const filteredAndSortedDomains = useMemo(() => {
-    if (!domains) return [];
-    let filtered = domains;
-    if (searchQuery) {
-      filtered = filtered.filter((domain) =>
-        domain.domain.toLowerCase().includes(searchQuery.toLowerCase())
-      );
-    }
-    switch (orderBy) {
-      case "newest":
-        return [...filtered].sort((a, b) => b.createdDate - a.createdDate);
-      case "oldest":
-        return [...filtered].sort((a, b) => a.createdDate - b.createdDate);
-      case "active":
-        return [...filtered].sort((a, b) => (b.isActive ? 1 : 0) - (a.isActive ? 1 : 0));
-      case "inactive":
-        return [...filtered].sort((a, b) => (a.isActive ? 1 : 0) - (b.isActive ? 1 : 0));
-      default:
-        return filtered;
-    }
-  }, [domains, searchQuery, orderBy]);
-
-  // Handlers
-  const handleEdit = useCallback((domain: Domain) => {
-    setSelectedDomain(domain);
-    setDrawerOpen(true);
-  }, []);
-
-  const handleClose = useCallback(() => {
-    setSelectedDomain(null);
-    setDrawerOpen(false);
-  }, []);
-
-  const handleCreate = useCallback(async (data: Partial<Domain>) => {
-    try {
-      await createDomain(data as Domain).unwrap();
-    } catch (error) {
-      console.error("Failed to create domain:", error);
-    }
-  }, [createDomain]);
-
-  const handleUpdate = useCallback(async (data: Partial<Domain>) => {
-    if (!selectedDomain) return;
-    try {
-      await updateDomain({ id: selectedDomain.id, data }).unwrap();
-    } catch (error) {
-      console.error("Failed to update domain:", error);
-    }
-  }, [selectedDomain, updateDomain]);
-
-  const handleDelete = useCallback(async (id: string) => {
-    try {
-      await deleteDomain(id).unwrap();
-    } catch (error) {
-      console.error("Failed to delete domain:", error);
-    }
-  }, [deleteDomain]);
-
-  const handleVerify = useCallback(async (id: string) => {
-    try {
-      await updateDomain({ id, data: { status: "verified" } }).unwrap();
-    } catch (error) {
-      console.error("Failed to verify domain:", error);
-    }
-  }, [updateDomain]);
-
-  // Memoized menu items for action column
   const getMenuItems = useCallback((record: Domain) => [
     {
       key: "verify",
@@ -148,80 +91,13 @@ const DomainsTable = ({ searchQuery, orderBy }: DomainsTableProps) => {
     },
     {
       key: "delete",
-      label: <span className="text-red-600">Delete</span>,
+      label: <span>Delete</span>,
       danger: true,
       onClick: () => handleDelete(record.id),
     },
   ], [handleEdit, handleDelete, handleVerify]);
 
-  // Table columns
-  const columns = useMemo(() => [
-    {
-      title: "Domain URL",
-      dataIndex: "domain",
-      key: "domain",
-      render: (text: string, record: Domain) => (
-        <span className="flex items-center gap-2">
-          {record.isActive ? (
-            <span className="inline-block w-3 h-3 rounded-full bg-green-500 mr-1" />
-          ) : (
-            <ExclamationCircleOutlined className="!text-red-600" />
-          )}
-          <Link
-            href={text}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-black"
-          >
-            {text}
-          </Link>
-        </span>
-      ),
-    },
-    {
-      title: "Active Status",
-      dataIndex: "isActive",
-      key: "isActive",
-      render: (active: boolean) => (
-        <Tag color={active ? "green" : "red"}>{active ? "Active" : "Not Active"}</Tag>
-      ),
-    },
-    {
-      title: "Verification status",
-      dataIndex: "status",
-      key: "status",
-      render: (status: string) => (
-        <Tag
-          color={
-            status === "verified"
-              ? "green"
-              : status === "pending"
-              ? "orange"
-              : "red"
-          }
-        >
-          {status === "verified"
-            ? "Verified"
-            : status === "pending"
-            ? "Pending"
-            : "Rejected"}
-        </Tag>
-      ),
-    },
-    {
-      title: "",
-      key: "action",
-      render: (_: any, record: Domain) => (
-        <Dropdown
-          menu={{ items: getMenuItems(record) }}
-          trigger={["click"]}
-          placement="bottomRight"
-        >
-          <Button type="text" icon={<MoreOutlined />} />
-        </Dropdown>
-      ),
-    },
-  ], [getMenuItems]);
+  const columns = getDomainTableColumns({ getMenuItems });
 
   if (fetchError) return notification.error("Error", "There was an error on loading domains.");
 
@@ -229,7 +105,13 @@ const DomainsTable = ({ searchQuery, orderBy }: DomainsTableProps) => {
     <>
       <div className="bg-white rounded-lg">
         <Table
-          dataSource={isLoading ? Array(5).fill({}) : filteredAndSortedDomains}
+          dataSource={isLoading ? Array(5).fill({}).map((_, index) => ({
+            id: `loading-${index}`,
+            domain: '',
+            status: 'pending',
+            isActive: false,
+            createdDate: Date.now()
+          } as Domain)) : filteredAndSortedDomains}
           columns={columns.map((column) => ({
             ...column,
             render: isLoading
