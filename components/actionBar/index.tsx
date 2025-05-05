@@ -1,8 +1,11 @@
-"use client"
+"use client";
 import { useState } from "react";
 import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import { Button, Input, Select } from "antd";
 import AddDomainDrawer from "@/components/drawer/AddDomainDrawer";
+import { useCreateDomainMutation } from "@/app/hooks/domainApi";
+import { useNotification } from "@/app/hooks/useNotification";
+import type { Domain } from "@/app/hooks/domainApi";
 
 const { Option } = Select;
 
@@ -12,56 +15,73 @@ interface ActionBarProps {
 }
 
 const ActionBar = ({ onSearch, onOrderChange }: ActionBarProps) => {
-    const [drawerOpen, setDrawerOpen] = useState(false);
-    const [searchValue, setSearchValue] = useState("");
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
+  const [createDomain, { isLoading: isCreating }] = useCreateDomainMutation();
+  const notification = useNotification();
 
-    const handleAdd = (value: string) => {
-        setDrawerOpen(false);
-    };
+  const handleCreate = async (data: Partial<Domain>) => {
+    try {
+      await createDomain(data as Domain).unwrap();
+      setDrawerOpen(false);
+      notification.success("Success", "Domain added successfully");
+    } catch (error) {
+      console.error("Failed to create domain:", error);
+      notification.error("Error", "Failed to add domain");
+      throw error;
+    }
+  };
 
-    const handleSearch = (value: string) => {
-        setSearchValue(value);
-        onSearch(value);
-    };
+  const handleSearch = (value: string) => {
+    setSearchValue(value);
+    onSearch(value);
+  };
 
-    return (
-        <>
-            <div className="flex items-center justify-between">
-                <Button size="large" type="primary" onClick={() => setDrawerOpen(true)}>
-                    <PlusOutlined className="text-[20px]" />
-                    <p>Add Domain</p>
-                </Button>
-                <div className="bg-white rounded-lg flex items-center">
-                    <div className="flex justify-end gap-4">
-                        <Select 
-                            size="large" 
-                            defaultValue="newest" 
-                            style={{ width: 300 }}
-                            onChange={onOrderChange}
-                        >
-                            <Option value="newest">Newest First</Option>
-                            <Option value="oldest">Oldest First</Option>
-                            <Option value="active">Active First</Option>
-                            <Option value="inactive">Inactive First</Option>
-                        </Select>
-                        <div className="w-[300px] relative">
-                            <Input 
-                                size="large" 
-                                placeholder="Search" 
-                                className="w-full !rounded-[4px]" 
-                                rootClassName="!pl-10" 
-                                allowClear 
-                                value={searchValue}
-                                onChange={(e) => handleSearch(e.target.value)}
-                            />
-                            <SearchOutlined className="text-[15px] absolute left-4 z-10 top-[50%] mt-[-7.5px]" />
-                        </div>
-                    </div>
-                </div>
+  return (
+    <>
+      <div className="flex items-center justify-between">
+        <Button size="large" type="primary" onClick={() => setDrawerOpen(true)}>
+          <PlusOutlined className="text-[20px]" />
+          <p>Add Domain</p>
+        </Button>
+        <div className="bg-white rounded-lg flex items-center">
+          <div className="flex justify-end gap-4">
+            <Select
+              size="large"
+              defaultValue="newest"
+              style={{ width: 300 }}
+              onChange={onOrderChange}
+            >
+              <Option value="newest">Newest First</Option>
+              <Option value="oldest">Oldest First</Option>
+              <Option value="active">Active First</Option>
+              <Option value="inactive">Inactive First</Option>
+            </Select>
+            <div className="w-[300px] relative">
+              <Input
+                size="large"
+                placeholder="Search"
+                className="w-full !rounded-[4px]"
+                rootClassName="!pl-10"
+                allowClear
+                value={searchValue}
+                onChange={(e) => handleSearch(e.target.value)}
+              />
+              <SearchOutlined className="text-[15px] absolute left-4 z-10 top-[50%] mt-[-7.5px]" />
             </div>
-            <AddDomainDrawer open={drawerOpen} onClose={() => setDrawerOpen(false)} />
-        </>
-    );
+          </div>
+        </div>
+      </div>
+      <AddDomainDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        onCreate={handleCreate}
+        onUpdate={async () => {}}
+        isCreating={isCreating}
+        isUpdating={false}
+      />
+    </>
+  );
 };
 
 export default ActionBar;

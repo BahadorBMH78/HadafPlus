@@ -1,3 +1,5 @@
+"use client"
+
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
 
 export interface Domain {
@@ -17,7 +19,13 @@ export interface CreateDomainRequest {
 
 export const domainApi = createApi({
   reducerPath: 'domainApi',
-  baseQuery: fetchBaseQuery({ baseUrl: 'https://6797aa2bc2c861de0c6d964c.mockapi.io/' }),
+  baseQuery: fetchBaseQuery({ 
+    baseUrl: 'https://6797aa2bc2c861de0c6d964c.mockapi.io/',
+    prepareHeaders: (headers) => {
+      headers.set('Content-Type', 'application/json');
+      return headers;
+    },
+  }),
   tagTypes: ['Domain'],
   endpoints: (builder) => ({
     getDomains: builder.query<Domain[], void>({

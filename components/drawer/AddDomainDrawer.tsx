@@ -1,16 +1,19 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useCallback } from "react";
 import { Drawer, Button } from "antd";
 import { CloseOutlined } from "@ant-design/icons";
 import DomainForm from "./DomainForm";
-import { useCreateDomainMutation, useUpdateDomainMutation } from "@/app/hooks/domainApi";
 import { useForm } from "react-hook-form";
 import type { Domain } from "@/app/hooks/domainApi";
+import { useNotification } from "@/app/hooks/useNotification";
 
 interface AddDomainDrawerProps {
   open: boolean;
   onClose: () => void;
   initialData?: Domain | null;
-  onUpdate?: (data: Partial<Domain>) => Promise<void>;
+  onCreate: (data: Partial<Domain>) => Promise<void>;
+  onUpdate: (data: Partial<Domain>) => Promise<void>;
+  isCreating: boolean;
+  isUpdating: boolean;
 }
 
 interface FormValues {
@@ -23,7 +26,10 @@ const AddDomainDrawer: React.FC<AddDomainDrawerProps> = ({
   open, 
   onClose, 
   initialData,
-  onUpdate 
+  onCreate,
+  onUpdate,
+  isCreating,
+  isUpdating
 }) => {
   const { control, handleSubmit, reset } = useForm<FormValues>({
     defaultValues: {
@@ -32,8 +38,7 @@ const AddDomainDrawer: React.FC<AddDomainDrawerProps> = ({
       isActive: true
     }
   });
-  const [createDomain, { isLoading: isCreating }] = useCreateDomainMutation();
-  const [updateDomain, { isLoading: isUpdating }] = useUpdateDomainMutation();
+  const notification = useNotification();
 
   useEffect(() => {
     if (open && initialData) {
@@ -51,27 +56,29 @@ const AddDomainDrawer: React.FC<AddDomainDrawerProps> = ({
     }
   }, [open, initialData, reset]);
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     onClose();
-  };
+  }, [onClose]);
 
-  const onSubmit = async (data: FormValues) => {
+  const onSubmit = useCallback(async (data: FormValues) => {
     try {
-      if (initialData && onUpdate) {
+      if (initialData) {
         await onUpdate(data);
       } else {
-        await createDomain({
+        await onCreate({
           ...data,
           createdDate: Date.now(),
-        }).unwrap();
+        });
       }
-      handleClose();
     } catch (error) {
       console.error('Failed to save domain:', error);
+      notification.error('Error', 'Failed to save domain');
     }
-  };
+  }, [initialData, onCreate, onUpdate, notification]);
 
-  const isLoading = isCreating || isUpdating;
+  const handleFormSubmit = useCallback(() => {
+    handleSubmit(onSubmit)();
+  }, [handleSubmit, onSubmit]);
 
   return (
     <Drawer
@@ -101,11 +108,11 @@ const AddDomainDrawer: React.FC<AddDomainDrawerProps> = ({
           <Button 
             className="w-[100px]" 
             type="primary" 
-            onClick={handleSubmit(onSubmit)} 
+            onClick={handleFormSubmit}
             size="large"
-            loading={isLoading}
+            loading={isCreating || isUpdating}
           >
-            {initialData ? 'Save' : 'Add'}
+            {initialData ? 'Edit' : 'Add'}
           </Button>
         </div>
       }

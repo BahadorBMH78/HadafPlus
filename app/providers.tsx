@@ -1,5 +1,5 @@
 "use client"
-import { ConfigProvider } from "antd";
+import { ConfigProvider, App } from "antd";
 import { Provider } from 'react-redux';
 import { store } from './store';
 
@@ -31,7 +31,9 @@ export default function Providers({
                     }
                 }}
             >
-                {children}
+                <App>
+                    {children}
+                </App>
             </ConfigProvider>
         </Provider>
     );

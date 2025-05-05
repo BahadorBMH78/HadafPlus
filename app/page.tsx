@@ -13,6 +13,7 @@ export default function Home() {
         <h1 className="text-[30px]">Domains</h1>
         <ActionBar onSearch={setSearchQuery} onOrderChange={setOrderBy} />
         <div className="mt-6">
+          {/* @ts-expect-error Async Server Component */}
           <DomainsTable searchQuery={searchQuery} orderBy={orderBy} />
         </div>
       </div>
