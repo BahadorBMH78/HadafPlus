@@ -1,6 +1,6 @@
 "use client";
 import React, { useCallback, useEffect } from "react";
-import { Table, Skeleton } from "antd";
+import { Table, Skeleton, Empty } from "antd";
 import { useGetDomainsQuery } from "@/app/hooks/domainApi";
 import type { Domain } from "@/app/hooks/domainApi";
 import AddDomainDrawer from "@/components/drawer/AddDomainDrawer";
@@ -121,6 +121,18 @@ const DomainsTable = ({ searchQuery, orderBy }: DomainsTableProps) => {
           pagination={false}
           rowClassName={() => "align-middle"}
           rowKey="id"
+          locale={{
+            emptyText: (
+              <Empty
+                image={Empty.PRESENTED_IMAGE_SIMPLE}
+                description={
+                  searchQuery
+                    ? "No domains found matching your search"
+                    : "No domains added yet"
+                }
+              />
+            ),
+          }}
         />
       </div>
       <AddDomainDrawer

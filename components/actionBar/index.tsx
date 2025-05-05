@@ -4,7 +4,6 @@ import { PlusOutlined, SearchOutlined } from "@ant-design/icons";
 import { Button, Input, Select } from "antd";
 import AddDomainDrawer from "@/components/drawer/AddDomainDrawer";
 import { useCreateDomainMutation } from "@/app/hooks/domainApi";
-import { useNotification } from "@/app/hooks/useNotification";
 import type { Domain } from "@/app/hooks/domainApi";
 
 const { Option } = Select;
@@ -18,18 +17,10 @@ const ActionBar = ({ onSearch, onOrderChange }: ActionBarProps) => {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [createDomain, { isLoading: isCreating }] = useCreateDomainMutation();
-  const notification = useNotification();
 
   const handleCreate = async (data: Partial<Domain>) => {
-    try {
-      await createDomain(data as Domain).unwrap();
-      setDrawerOpen(false);
-      notification.success("Success", "Domain added successfully");
-    } catch (error) {
-      console.error("Failed to create domain:", error);
-      notification.error("Error", "Failed to add domain");
-      throw error;
-    }
+    await createDomain(data as Domain).unwrap();
+    setDrawerOpen(false);
   };
 
   const handleSearch = (value: string) => {

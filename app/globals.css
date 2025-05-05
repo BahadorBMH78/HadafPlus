@@ -1,9 +1,5 @@
 @import "tailwindcss";
 
-body {
-  color: var(--foreground);
-}
-
 .ant-app {
   width: 100% !important;
   display: flex;
